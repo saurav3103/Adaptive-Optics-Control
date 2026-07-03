@@ -1,0 +1,23 @@
+class PID:
+    def __init__(self, Kp, Ki, Kd, dt, output_min, output_max):
+        self.Kp, self.Ki, self.Kd = Kp, Ki, Kd
+        self.dt = dt
+        self.output_min = output_min
+        self.output_max = output_max
+        self.integral   = 0.0
+        self.prev_error = 0.0
+
+    def step(self, error):
+        p = self.Kp * error
+        d = self.Kd * (error - self.prev_error) / self.dt
+        self.prev_error = error
+
+        output_pd = p + d
+        output_unclipped = output_pd + self.Ki * self.integral
+        # anti-windup: only integrate if not saturated
+        if not (output_unclipped >= self.output_max and error > 0) and \
+           not (output_unclipped <= self.output_min and error < 0):
+            self.integral += error * self.dt
+
+        output = output_pd + self.Ki * self.integral
+        return np.clip(output, self.output_min, self.output_max)
