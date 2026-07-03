@@ -76,10 +76,14 @@ ao-control-simulation/
 ├── notebooks/
 │   └── ao_simulation.ipynb
 ├── src/
+│   ├── actuator_dynamics.py
+│   ├── closed_loop_control_with_PI_controller.py
+│   ├── disturbance_model.py
+│   ├── dynamic_lqg_controller.py
+│   ├── open_loop_control.py
 │   ├── optics.py
-│   ├── disturbance.py
-│   ├── controllers.py
-│   └── identification.py
+│   ├── psd_analysis.py
+│   ├── system_identification.py
 ├── results/
 │   ├── open_loop.png
 │   ├── closed_loop_PI.png
