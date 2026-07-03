@@ -1,0 +1,163 @@
+# ── Block 7: Actuator Dynamics (First Order Lag) ─────────────
+
+tau_c = 0.1   # time constant for center actuator [s]
+tau_a = 0.1   # time constant for width actuator [s]
+
+# discrete time smoothing coefficients
+alpha_c = np.exp(-dt / tau_c)
+alpha_a = np.exp(-dt / tau_a)
+
+print(f"Cutoff frequency (center): {1/(2*np.pi*tau_c):.2f} Hz")
+print(f"Cutoff frequency (width):  {1/(2*np.pi*tau_a):.2f} Hz")
+print(f"alpha_c: {alpha_c:.4f}")
+print(f"alpha_a: {alpha_a:.4f}")
+
+# ── Simulation with actuator lag + D+ controller ─────────────
+np.random.seed(42)
+
+# actuator states (memory of previous position)
+c_actuator = 0.0
+a_actuator = a0
+
+a_lag_log   = np.zeros(len(time))
+c_lag_log   = np.zeros(len(time))
+c_act_log   = np.zeros(len(time))
+roi_lag_log = np.zeros(len(time))
+
+for i, t in enumerate(time):
+    # step 1: disturbance moves the slit
+    a_dist, c_dist = disturbed_slit(t)
+
+    # step 2: measure current sensor output
+    s_measured = measure(a_dist, c_dist)
+
+    # step 3: compute sensor deviation from nominal
+    ds = s_measured - s_nom
+
+    # step 4: D+ computes commanded correction
+    u_cmd = -D_plus @ ds
+
+    # step 5: actuator lags behind command (first order lag)
+    c_actuator = alpha_c * c_actuator + (1 - alpha_c) * u_cmd[0]
+    a_actuator = alpha_a * a_actuator + (1 - alpha_a) * (a0 + u_cmd[1])
+
+    # step 6: apply lagged actuator output
+    c_act = c_dist + c_actuator
+    a_act = np.clip(a_dist + (a_actuator - a0), 0.05e-3, 2e-3)
+
+    # step 7: measure corrected intensity
+    I = intensity(x, a_act, c_act, lam, f)
+
+    a_lag_log[i]   = a_act
+    c_lag_log[i]   = c_dist
+    c_act_log[i]   = c_act
+    roi_lag_log[i] = I[roi_mask].mean()
+
+# ── Plot ─────────────────────────────────────────────────────
+fig, axes = plt.subplots(2, 1, figsize=(10, 6), tight_layout=True)
+
+axes[0].plot(time, roi_log,     color='crimson',   alpha=0.7,
+             label=f'Open loop   (mean={roi_log.mean():.3f}, std={roi_log.std():.3f})')
+axes[0].plot(time, roi_dp_log,  color='green',     alpha=0.7,
+             label=f'D+ no lag   (mean={roi_dp_log.mean():.3f}, std={roi_dp_log.std():.3f})')
+axes[0].plot(time, roi_lag_log, color='purple',    alpha=0.8,
+             label=f'D+ with lag (mean={roi_lag_log.mean():.3f}, std={roi_lag_log.std():.3f})')
+axes[0].set_ylabel('ROI mean intensity')
+axes[0].set_xlabel('Time [s]')
+axes[0].legend()
+axes[0].set_title('Effect of Actuator Lag on D+ Controller')
+
+axes[1].plot(time, c_lag_log*1e3, color='darkorange', alpha=0.9, label='Disturbance c(t)')
+axes[1].plot(time, c_act_log*1e3, color='purple',     alpha=0.9, label='Actuated c(t) with lag')
+axes[1].axhline(0, color='k', linestyle='--', linewidth=0.8, label='optimal')
+axes[1].set_ylabel('Slit center [mm]')
+axes[1].set_xlabel('Time [s]')
+axes[1].legend()
+
+plt.savefig('actuator_lag.png', dpi=150)
+plt.show()
+
+print(f"Open loop     — mean: {roi_log.mean():.4f},    std: {roi_log.std():.4f}")
+print(f"D+ no lag     — mean: {roi_dp_log.mean():.4f}, std: {roi_dp_log.std():.4f}")
+print(f"D+ with lag   — mean: {roi_lag_log.mean():.4f}, std: {roi_lag_log.std():.4f}")# ── Block 7: Actuator Dynamics (First Order Lag) ─────────────
+
+tau_c = 0.1   # time constant for center actuator [s]
+tau_a = 0.1   # time constant for width actuator [s]
+
+# discrete time smoothing coefficients
+alpha_c = np.exp(-dt / tau_c)
+alpha_a = np.exp(-dt / tau_a)
+
+print(f"Cutoff frequency (center): {1/(2*np.pi*tau_c):.2f} Hz")
+print(f"Cutoff frequency (width):  {1/(2*np.pi*tau_a):.2f} Hz")
+print(f"alpha_c: {alpha_c:.4f}")
+print(f"alpha_a: {alpha_a:.4f}")
+
+# ── Simulation with actuator lag + D+ controller ─────────────
+np.random.seed(42)
+
+# actuator states (memory of previous position)
+c_actuator = 0.0
+a_actuator = a0
+
+a_lag_log   = np.zeros(len(time))
+c_lag_log   = np.zeros(len(time))
+c_act_log   = np.zeros(len(time))
+roi_lag_log = np.zeros(len(time))
+
+for i, t in enumerate(time):
+    # step 1: disturbance moves the slit
+    a_dist, c_dist = disturbed_slit(t)
+
+    # step 2: measure current sensor output
+    s_measured = measure(a_dist, c_dist)
+
+    # step 3: compute sensor deviation from nominal
+    ds = s_measured - s_nom
+
+    # step 4: D+ computes commanded correction
+    u_cmd = -D_plus @ ds
+
+    # step 5: actuator lags behind command (first order lag)
+    c_actuator = alpha_c * c_actuator + (1 - alpha_c) * u_cmd[0]
+    a_actuator = alpha_a * a_actuator + (1 - alpha_a) * (a0 + u_cmd[1])
+
+    # step 6: apply lagged actuator output
+    c_act = c_dist + c_actuator
+    a_act = np.clip(a_dist + (a_actuator - a0), 0.05e-3, 2e-3)
+
+    # step 7: measure corrected intensity
+    I = intensity(x, a_act, c_act, lam, f)
+
+    a_lag_log[i]   = a_act
+    c_lag_log[i]   = c_dist
+    c_act_log[i]   = c_act
+    roi_lag_log[i] = I[roi_mask].mean()
+
+# ── Plot ─────────────────────────────────────────────────────
+fig, axes = plt.subplots(2, 1, figsize=(10, 6), tight_layout=True)
+
+axes[0].plot(time, roi_log,     color='crimson',   alpha=0.7,
+             label=f'Open loop   (mean={roi_log.mean():.3f}, std={roi_log.std():.3f})')
+axes[0].plot(time, roi_dp_log,  color='green',     alpha=0.7,
+             label=f'D+ no lag   (mean={roi_dp_log.mean():.3f}, std={roi_dp_log.std():.3f})')
+axes[0].plot(time, roi_lag_log, color='purple',    alpha=0.8,
+             label=f'D+ with lag (mean={roi_lag_log.mean():.3f}, std={roi_lag_log.std():.3f})')
+axes[0].set_ylabel('ROI mean intensity')
+axes[0].set_xlabel('Time [s]')
+axes[0].legend()
+axes[0].set_title('Effect of Actuator Lag on D+ Controller')
+
+axes[1].plot(time, c_lag_log*1e3, color='darkorange', alpha=0.9, label='Disturbance c(t)')
+axes[1].plot(time, c_act_log*1e3, color='purple',     alpha=0.9, label='Actuated c(t) with lag')
+axes[1].axhline(0, color='k', linestyle='--', linewidth=0.8, label='optimal')
+axes[1].set_ylabel('Slit center [mm]')
+axes[1].set_xlabel('Time [s]')
+axes[1].legend()
+
+plt.savefig('actuator_lag.png', dpi=150)
+plt.show()
+
+print(f"Open loop     — mean: {roi_log.mean():.4f},    std: {roi_log.std():.4f}")
+print(f"D+ no lag     — mean: {roi_dp_log.mean():.4f}, std: {roi_dp_log.std():.4f}")
+print(f"D+ with lag   — mean: {roi_lag_log.mean():.4f}, std: {roi_lag_log.std():.4f}")
