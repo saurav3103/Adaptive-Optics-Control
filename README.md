@@ -85,12 +85,12 @@ ao-control-simulation/
 │   ├── psd_analysis.py
 │   ├── system_identification.py
 ├── results/
-│   ├── open_loop.png
-│   ├── closed_loop_PI.png
-│   ├── dplus_control.png
 │   ├── actuator_lag.png
-│   ├── psd_analysis.png
-│   └── lqg_control.png
+│   ├── lqg_control.png
+│   ├── open_loop.png
+│   ├── open_loop_vs_closed_loop_PI.png
+│   ├── open_loop_vs_closed_loop_PI_vs_D+_control.png
+│   └── psd_analysis.png
 └── docs/
     └── writeup.md
 ```
