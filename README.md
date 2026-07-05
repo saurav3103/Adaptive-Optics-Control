@@ -107,7 +107,6 @@ ao-control-simulation/
 ## Connection to Research
 
 This simulation is directly motivated by wavefront control methods used in:
-- Verhaegen group (N4CI, TU Delft DCSC) — data-driven AO control
 - ASML EUV lithography — sub-nm wavefront correction at high bandwidth
 - Relevant paper: Hinnen et al., "A data-driven H2-optimal control approach for adaptive optics"
 
